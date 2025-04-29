@@ -3,16 +3,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initApp() {
-    // Показываем индикатор загрузки
     toggleLoadingState(true);
     
-    // Добавляем анимацию при скролле
     addScrollAnimation();
     
-    // Запрашиваем данные
     fetchPredictionData();
     
-    // Обработчик кнопки обновления
     document.getElementById('refresh-btn').addEventListener('click', function() {
         toggleLoadingState(true);
         fetchPredictionData(true);
@@ -37,14 +33,11 @@ function fetchPredictionData(isRefresh = false) {
             return response.json();
         })
         .then(data => {
-            // Скрываем индикатор загрузки
             toggleLoadingState(false);
             
-            // Обрабатываем данные
             renderChart(data);
             updateStats(data);
             
-            // Если это обновление, показываем уведомление
             if (isRefresh) {
                 showNotification('Данные успешно обновлены!', 'success');
             }
@@ -65,19 +58,15 @@ function renderChart(data) {
     const history = data.history;
     const prediction = data.prediction;
     
-    // Форматируем данные
     const dates = history.map(item => item.date);
     const rates = history.map(item => item.rate);
     
-    // Добавляем прогноз
     const lastDate = new Date(dates[dates.length - 1]);
     const predDate = new Date(lastDate);
     predDate.setDate(lastDate.getDate() + 3);
     
-    // Форматируем дату для отображения
     const formattedPredDate = predDate.toISOString().split('T')[0];
     
-    // Создаем график
     Plotly.newPlot('chart', [
         {
             x: dates,
@@ -152,7 +141,6 @@ function renderChart(data) {
         }
     });
 
-    // Делаем график адаптивным
     window.addEventListener('resize', function() {
         Plotly.relayout('chart', {
             'xaxis.autorange': true,
@@ -165,32 +153,25 @@ function updateStats(data) {
     const history = data.history;
     const prediction = data.prediction;
     
-    // Получаем последнее значение
     const lastRate = history[history.length - 1].rate;
     
-    // Процентное изменение
     const percentChange = ((prediction - lastRate) / lastRate * 100).toFixed(2);
     const direction = percentChange >= 0 ? 'up' : 'down';
     
-    // Обновляем статистику с анимацией
     animateValue('current-rate', 0, lastRate, 1000, 2);
     animateValue('predicted-rate', 0, prediction, 1000, 2);
     
-    // Обновляем иконку и процент изменения
     document.getElementById('percent-change').textContent = `${Math.abs(percentChange)}%`;
     document.getElementById('percent-change').className = `stat-value ${direction}`;
     document.getElementById('trend-icon').className = `fas fa-arrow-${direction}`;
     
-    // Средние значения
     const mean = history.reduce((sum, item) => sum + item.rate, 0) / history.length;
     animateValue('average-rate', 0, mean, 1000, 2);
     
-    // Обновляем дату последнего обновления
     const now = new Date();
     document.getElementById('last-update').textContent = now.toLocaleString();
 }
 
-// Функция для анимации чисел
 function animateValue(id, start, end, duration, decimals = 0) {
     const obj = document.getElementById(id);
     const range = end - start;
@@ -217,7 +198,6 @@ function animateValue(id, start, end, duration, decimals = 0) {
     run();
 }
 
-// Функция для анимации при скролле
 function addScrollAnimation() {
     const elements = document.querySelectorAll('.stat-card, .card');
     
@@ -249,9 +229,7 @@ function addScrollAnimation() {
     });
 }
 
-// Функция для показа уведомлений
 function showNotification(message, type = 'info') {
-    // Создаем элемент уведомления, если его нет
     let notification = document.getElementById('notification');
     if (!notification) {
         notification = document.createElement('div');
@@ -270,7 +248,6 @@ function showNotification(message, type = 'info') {
         document.body.appendChild(notification);
     }
     
-    // Устанавливаем цвет в зависимости от типа
     if (type === 'success') {
         notification.style.backgroundColor = '#2ecc71';
     } else if (type === 'error') {
@@ -279,15 +256,12 @@ function showNotification(message, type = 'info') {
         notification.style.backgroundColor = '#3498db';
     }
     
-    // Устанавливаем сообщение
     notification.textContent = message;
     
-    // Показываем уведомление
     setTimeout(() => {
         notification.style.transform = 'translateX(0)';
     }, 100);
     
-    // Скрываем уведомление через 3 секунды
     setTimeout(() => {
         notification.style.transform = 'translateX(150%)';
     }, 3000);
