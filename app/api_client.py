@@ -45,7 +45,6 @@ class ExchangeRateAPI:
         return pd.DataFrame(data)
     
     def _generate_fake_data(self, target_currency="KRW", days=60):
-        """Генерирует тестовые данные если API недоступен"""
         data = []
         base_rate = 1300.0 if target_currency == "KRW" else 100.0
         

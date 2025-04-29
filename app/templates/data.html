@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRW/USD Predict - База данных</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+    <style>
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border-radius: 10px;
+        }
+        
+        .data-table th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: rgba(0,0,0,0.02);
+        }
+        
+        .data-table tr:hover {
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .pagination a {
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: all 0.3s;
+            color: var(--primary-color);
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .pagination a:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .pagination .active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .tools {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .search {
+            display: flex;
+            align-items: center;
+            max-width: 300px;
+        }
+        
+        .search input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            width: 100%;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .search input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+        
+        .empty-data {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <h1><i class="fas fa-chart-line"></i> KRW/USD Predict</h1>
+            <div>
+                <a href="/" class="btn"><i class="fas fa-home"></i> На главную</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>База данных курсов валют</h2>
+            
+            <div class="tools">
+                <div class="search">
+                    <input type="text" id="searchInput" placeholder="Поиск по дате..." onkeyup="filterTable()">
+                </div>
+                <a href="/data?format=csv" class="btn"><i class="fas fa-download"></i> Скачать CSV</a>
+            </div>
+            
+            {% if data %}
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Курс KRW/USD</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            {% for row in data %}
+                                <tr>
+                                    <td>{{ row[0] }}</td>
+                                    <td>{{ row[1] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if pages > 1 %}
+                <div class="pagination">
+                    {% for i in range(1, pages + 1) %}
+                        <a href="/data?page={{ i }}" {% if i == current_page %}class="active"{% endif %}>{{ i }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-data">
+                    <i class="fas fa-database" style="font-size: 48px; opacity: 0.3;"></i>
+                    <p>База данных пуста или не найдена.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 KRW/USD Predict - Сервис прогнозирования курса валют на основе CatBoost</p>
+            <div class="footer-links">
+                <a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fas fa-code"></i></a>
+                <a href="/data"><i class="fas fa-database"></i></a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toUpperCase();
+            const tbody = document.getElementById('tableBody');
+            const rows = tbody.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const tdDate = rows[i].getElementsByTagName('td')[0];
+                if (tdDate) {
+                    const txtValue = tdDate.textContent || tdDate.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        rows[i].style.display = '';
+                    } else {
+                        rows[i].style.display = 'none';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html> 
